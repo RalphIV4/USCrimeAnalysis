@@ -1,7 +1,18 @@
 <h1>United States Historical Crime Analysis</h1>
 
 <h2>Description</h2>
-**Paste Description**
+This report presents the results of an exploratory analysis of the different violent crimes reported in different areas of the United States from 1975 to 2014. The data was compiled by the FBI in which they collected crime reports from many of the United States’ police agencies. The FBI classifies homicides, rapes, assaults, and robberies as violent crimes. The data only reports 33 of the 50 states, including Washington, DC.
+The raw dataset has 10 columns. After cleaning and editing the set, the number of columns was 12. The following are which we use for exploratory analysis (column names are self-explanatory): <br/> <br/>
+
+1.	report_year – categorical
+2.	agency_jurisdiction (city and state) – categorical
+3.	population – numerical
+4.	violent_crime – numerical
+5.	homicides – numerical
+6.	rapes – numerical
+7.	assaults – numerical
+8.	robberies – numerical
+
 <br />
 
 
