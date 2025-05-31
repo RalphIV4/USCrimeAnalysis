@@ -1,17 +1,18 @@
 <h1>United States Historical Crime Analysis</h1>
 
-<h2>Description</h2>
-This report presents the results of an exploratory analysis of the different violent crimes reported in different areas of the United States from 1975 to 2014. The data was compiled by the FBI in which they collected crime reports from many of the United States’ police agencies. The FBI classifies homicides, rapes, assaults, and robberies as violent crimes. The data only reports 33 of the 50 states, including Washington, DC.
-The raw dataset has 10 columns. After cleaning and editing the set, the number of columns was 12. The following are which we use for exploratory analysis (column names are self-explanatory): <br/> <br/>
+<h2>📌 Overview</h2>
+This project presents an exploratory analysis of violent crime trends across different regions and states in the U.S. between 1975 and 2014. Using FBI crime data, we examine crime patterns, correlations with population, and regional variations. Insights include the peak of violent crime in the early 1990s, regional differences, and the distribution of specific crimes such as homicides, robberies, rapes, and assaults. <br/> <br/>
 
-1.	report_year – categorical
-2.	agency_jurisdiction (city and state) – categorical
-3.	population – numerical
-4.	violent_crime – numerical
-5.	homicides – numerical
-6.	rapes – numerical
-7.	assaults – numerical
-8.	robberies – numerical
+<h2> 📊 Key Insights</h2>
+<ul>
+        <li>Violent crime rates peaked in the early 1990s, followed by a steady decline.</li>
+        <li>The <strong>Northeastern region</strong> showed the highest average crime per year, while <strong>Illinois</strong> had a higher crime rate than all Northeast states.</li>
+        <li>Population density has a strong positive correlation with violent crimes—urban areas see higher crime rates.</li>
+        <li>Crime composition shifted over time: <strong>robberies</strong> were most prevalent until the mid-1980s, then <strong>assaults</strong> took the lead.</li>
+        <li><strong>Atlanta, GA</strong> had the highest crime per capita, while <strong>Fairfax County, VA</strong> had the lowest.</li>
+        <li>Different regions showed distinct crime patterns—assaults were most common everywhere except the Northeast, where robberies dominated.</li>
+        <li><strong>New York</strong> had the highest robbery and homicide reports, while <strong>California</strong> led in rape and assault reports.</li>
+
 
 <br />
 
