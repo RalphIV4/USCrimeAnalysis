@@ -1,10 +1,11 @@
-<h1>United States Historical Crime Analysis</h1>
+<h1>United States Crime Story: An Exploratory Data Analysis</h1>
+    <p>🔎 <em>Analyzing historical violent crime trends in the U.S. from 1975 to 2014</em></p>
 
 <h2>📌 Overview</h2>
-This project presents an exploratory analysis of violent crime trends across different regions and states in the U.S. between 1975 and 2014. Using FBI crime data, we examine crime patterns, correlations with population, and regional variations. Insights include the peak of violent crime in the early 1990s, regional differences, and the distribution of specific crimes such as homicides, robberies, rapes, and assaults. <br/> <br/>
+    <p>This project presents an exploratory analysis of violent crime trends across different regions and states in the U.S. between 1975 and 2014. Using FBI crime data, we examine crime patterns, correlations with population, and regional variations. Insights include the peak of violent crime in the early 1990s, regional differences, and the distribution of specific crimes such as homicides, robberies, rapes, and assaults.</p>
 
-<h2> 📊 Key Insights</h2>
-<ul>
+<h2>📊 Key Insights</h2>
+    <ul>
         <li>Violent crime rates peaked in the early 1990s, followed by a steady decline.</li>
         <li>The <strong>Northeastern region</strong> showed the highest average crime per year, while <strong>Illinois</strong> had a higher crime rate than all Northeast states.</li>
         <li>Population density has a strong positive correlation with violent crimes—urban areas see higher crime rates.</li>
@@ -12,49 +13,32 @@ This project presents an exploratory analysis of violent crime trends across dif
         <li><strong>Atlanta, GA</strong> had the highest crime per capita, while <strong>Fairfax County, VA</strong> had the lowest.</li>
         <li>Different regions showed distinct crime patterns—assaults were most common everywhere except the Northeast, where robberies dominated.</li>
         <li><strong>New York</strong> had the highest robbery and homicide reports, while <strong>California</strong> led in rape and assault reports.</li>
+    </ul>
+
+<h2>🗂 Dataset Details</h2>
+    <ul>
+        <li><strong>Source:</strong> FBI Uniform Crime Reports (1975-2014)</li>
+        <li><strong>Columns Used for Analysis:</strong></li>
+        <ul>
+            <li><code>report_year</code> (Year)</li>
+            <li><code>agency_jurisdiction</code> (City & State)</li>
+            <li><code>population</code> (Total residents)</li>
+            <li><code>violent_crime</code>, <code>homicides</code>, <code>rapes</code>, <code>assaults</code>, <code>robberies</code> (Crime counts)</li>
+        </ul>
+    </ul>
 
 
-<br />
+<h2>📈 Analysis Methods</h2>
+    <ul>
+        <li><strong>Programming Language and packages:</strong> R (tidyverse, usmap, scales, e1071)
+        <li><strong>Data Cleaning & Preprocessing:</strong> Handling missing values, categorizing regions, structuring datasets.</li>
+        <li><strong>Exploratory Data Analysis (EDA):</strong> Distribution plots, time series trends, and regional comparisons.</li>
+        <li><strong>Correlation Analysis:</strong> Examining crime rates vs. population density.</li>
+        <li><strong>Geospatial Mapping:</strong> Visualizing crime per capita across U.S. states.</li>
+    </ul>
 
 
-<h2>Languages and Utilities Used</h2>
 
-- <b>R </b> 
-
-<h2>Environments Used </h2>
-
-- <b>R Studio</b>
-
-<h2>Program walk-through:</h2>
-
-<p align="center">
-Launch the utility: <br/>
-<img src="https://i.imgur.com/62TgaWL.png" height="80%" width="80%" alt="Disk Sanitization Steps"/>
-<br />
-<br />
-Select the disk:  <br/>
-<img src="https://i.imgur.com/tcTyMUE.png" height="80%" width="80%" alt="Disk Sanitization Steps"/>
-<br />
-<br />
-Enter the number of passes: <br/>
-<img src="https://i.imgur.com/nCIbXbg.png" height="80%" width="80%" alt="Disk Sanitization Steps"/>
-<br />
-<br />
-Confirm your selection:  <br/>
-<img src="https://i.imgur.com/cdFHBiU.png" height="80%" width="80%" alt="Disk Sanitization Steps"/>
-<br />
-<br />
-Wait for process to complete (may take some time):  <br/>
-<img src="https://i.imgur.com/JL945Ga.png" height="80%" width="80%" alt="Disk Sanitization Steps"/>
-<br />
-<br />
-Sanitization complete:  <br/>
-<img src="https://i.imgur.com/K71yaM2.png" height="80%" width="80%" alt="Disk Sanitization Steps"/>
-<br />
-<br />
-Observe the wiped disk:  <br/>
-<img src="https://i.imgur.com/AeZkvFQ.png" height="80%" width="80%" alt="Disk Sanitization Steps"/>
-</p>
 
 <!--
  ```diff
