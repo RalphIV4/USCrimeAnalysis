@@ -30,7 +30,7 @@
 
 <h2>📈 Analysis Methods</h2>
     <ul>
-        <li><strong>Programming Language and packages:</strong> R (tidyverse, usmap, scales, e1071)
+        <li><strong>Programming Language and packages:</strong> R (tidyverse, usmap, scales, e1071, lubridate)
         <li><strong>Data Cleaning & Preprocessing:</strong> Handling missing values, categorizing regions, structuring datasets.</li>
         <li><strong>Exploratory Data Analysis (EDA):</strong> Distribution plots, time series trends, and regional comparisons.</li>
         <li><strong>Correlation Analysis:</strong> Examining crime rates vs. population density.</li>
