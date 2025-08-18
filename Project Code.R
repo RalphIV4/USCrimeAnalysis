@@ -2,11 +2,15 @@ library(tidyverse)
 library(usmap)
 library(e1071)
 library(scales)
-crime_raw <- read.csv("C:/Users/baisdera/OneDrive - Seton Hall University/Fall 2022/BITM 3744/Project/Crime_Report.csv")
+
+# read in data set
+crime_raw <- read.csv("crime_report.csv")
+
+# create data frame with state region and state abbreviation
 regions <- data.frame(state.region, state.abb)
 
-
-crime <- na.omit(crime_raw) %>% 
+# 
+crime <- na.omit(crime_raw) %>% # omit 
   separate(agency_jurisdiction, c("city", "state"), sep = ", ") %>% 
   left_join(regions, by = c("state" = "state.abb"))
 
@@ -139,4 +143,5 @@ crime %>%
 
 c <- crime %>% 
   gather(key = "crime_type", value = "reports", rapes, homicides, robberies, assaults) 
+
 
