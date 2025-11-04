@@ -1,0 +1,387 @@
+---
+title: "United States Crime Story"
+author:
+- name: Ralph Baisden IV
+output:
+  html_document:
+    df_print: paged
+    number_sections: yes
+  pdf_document: default
+  word_document: default
+---
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(usmap)
+library(scales)
+
+crime_raw <- read.csv("C:/Users/ralph/OneDrive/Data Projects/US Crime Analysis/data/crime_report.csv")
+
+```
+
+
+# Executive Summary 
+
+In this dataset, we were able to examine the relationships between years, location, and violent crime.
+
+In our time series analysis, we observed a peak in violent crime reports in the early 1990s, followed by a decline. One might wonder what caused this decline during that decade. Many studies suggest that the causes can be traced back almost two decades prior to the decline. One of the most notable sources for this study is 'Freakonomics.' In the early chapters of the book, a correlation was established between the enactment of Roe v. Wade and the subsequent decline in crime rates. Roe v. Wade, decided on January 22, 1973, granted women the right to abortion. This right potentially prevented the births of individuals who might have committed crimes in the future. How exactly did this right lead to a reduction in crime rates? To answer this question, we need to consider who typically opts for abortion. It is often young, unmarried women from lower socio-economic backgrounds. Violent crimes are more likely to be committed by individuals who grow up in such environments. It is speculated that if Roe v. Wade had not been decided, violent crime rates would have continued to rise. As we know, there is a strong positive correlation between population and violent crimes, and a decision like Roe v. Wade that affects population would also affect violent crime rates.
+
+We conducted a deeper analysis of our time series to examine how the average crime rates progressed in different regions and states. All regions showed a consistent increase until the 1990s, followed by a decline. The Northeast region had the highest average crimes per year, primarily due to its higher population compared to other regions in the United States. However, the North Central region contained a state with an average crime rate higher than all the states in the Northeastern region, and that state was Illinois. When examining how each crime type progressed over this time period, more extreme crimes such as rape and homicides maintained a steady count compared to assaults and robberies, which exhibited more fluctuations. Additionally, we analyzed how the proportions of each crime changed over time. From 1975 to the mid-1980s, robberies were the most prevalent crime; afterward, assaults became the majority of all reported violent crimes.
+
+We also conducted an important analysis of crime per capita in specific locations. The area with the highest average crime per capita is Atlanta, GA, while the lowest is Fairfax County, VA. It's worth noting that Atlanta has a significantly larger population than Fairfax, and the high population density should also be taken into consideration. Moreover, Fairfax is known to be one of the most affluent areas in the South, which contributes to its low average crimes per capita.
+
+Our analysis revealed that different crimes are more prevalent in different locations. While all regions share the common ranking of crime type reports, the Northeast differs in having robberies as the most reported crime, while other regions report assaults as the most prevalent. We also observed which states have the highest reports for specific types of crimes. New York leads in reported robberies and homicides, while California has the highest reports of rape and assaults. These statistics reinforce the conclusion that there is a strong correlation between violent crimes and population, as New York and California are the most populated states in the U.S.
+
+# Introduction
+
+This report presents the results of an exploratory analysis of the different violent crimes reported in different areas of the United States from 1975 to 2014. The data was compiled by the FBI in which they collected crime reports from many of the United States' police agencies. The FBI classifies homicides, rapes, assaults, and robberies as violent crimes. Unfortunately, the data only reports 33 of the 50 states, including Washington, DC. 
+
+The raw dataset has 10 columns. After cleaning and editing the set, the number of columns increased to 12. The following are which we use for exploratory analysis (column names are self-explanatory):
+
+1. report_year -- categorical  
+1. agency_jurisdiction (city and state) -- categorical
+1. population -- numerical
+1. violent_crime -- numerical
+1. homicides -- numerical
+1. rapes -- numerical
+1. assaults -- numerical
+1. robberies -- numerical
+
+# Initial Computations
+
+```{r warning=FALSE}
+regions <- data.frame(state.region, state.abb)
+
+crime <- na.omit(crime_raw) %>% 
+  separate(agency_jurisdiction, c("city", "state"), sep = ", ") %>% 
+  left_join(regions, by = c("state" = "state.abb"))
+
+for (i in 1:nrow(crime)){
+  if (is.na(crime$state.region[i])){
+    crime$state.region[i] <- "South" 
+  }
+}
+```
+
+From the state dataset provided by R, we created a regions data frame which includes the state abbreviations and the state regions. This was used to add regions into the Crime data set. However, the data set did not have a specific region for Washington, DC and would have an error as a placeholder. To correct this error, we read in "South" as the region for Washington, DC.
+
+In addition, we also separated the 'agency_jurisdiction' variable into 'state' and 'city' with the goal of performing a deeper exploratory analysis into each. 
+
+# Basic exploratory analysis
+
+In this section, we explore each column independently of other columns to get an initial understanding of the dataset. A later section looks at relationships between two or more columns.
+
+## Distribution of Report Years
+
+```{r}
+crime %>% 
+  ggplot(aes(report_year)) +
+  geom_bar()
+```
+
+As we can see, the distribution is uniform. This shows that the count of number of years in the data seems to be almost even. 
+
+We can view how many reports were made during each year using a table:
+```{r}
+table(crime$report_year)
+```
+
+Just as expected, each of the years have almost an even report count. 
+
+## Distribution of States
+
+```{r message=FALSE, warning=FALSE}
+crime %>% 
+  count(state) %>% 
+  mutate(state = reorder(state, n)) %>% 
+  ggplot(aes(state, n)) +
+  geom_bar(stat = "identity") +
+  coord_flip() 
+
+n_distinct(crime$state)
+```
+
+From looking at the distribution, we can see that the states that are known to have a higher population have more crimes that have been reported in the United States. 
+
+Out of 50 states, only 33 have reports in this data set.
+
+```{r}
+subset(regions, !(state.abb %in% crime$state))
+```
+
+This shows which states' violent crimes statistics have not been reported.  
+
+## Distribution of United States Regions
+
+```{r warning=FALSE}
+crime %>%
+  ggplot() +
+  geom_bar(aes(state.region)) 
+```
+From this chart, we can see that the Southern region of the United States has the most reported crimes compared to the other regions. 
+
+## Distribution of Violent Crimes
+
+```{r warning=FALSE}
+ggplot(crime) + 
+  geom_histogram(aes(violent_crimes), bins = 30)
+```
+
+We see that there are more areas that have a lower crime count than those that have a higher report count. This is most likely due to the correlation between crime and population, a statistic in which we will explore later. 
+
+Let us look at a boxplot:
+```{r warning=FALSE}
+iqr <- IQR(crime$violent_crimes)
+
+ggplot(crime, aes(violent_crimes)) + 
+  geom_boxplot() + 
+  coord_cartesian(xlim = c(0, quantile(crime$violent_crimes, .75) + 1.5*iqr))
+```
+
+This boxplot excludes outliers to in order to have a better view of majority of the data. 
+
+## Distribution of Population
+
+```{r warning=FALSE}
+options(scipen = 1000)
+ggplot(crime) +
+  geom_histogram(aes(population), bins = 35)
+```
+
+As expected, majority of the cities and states have a lower population count. The outliers are most likely highly populated areas such as California or Texas. The distribution is very similar to the distribution of the number of crimes reported. 
+
+Let us look at a boxplot of this distribution: 
+```{r warning=FALSE}
+ggplot(crime) +
+  geom_boxplot(aes(population))
+```
+
+## Distributions For Each Violent Crime
+
+```{r}
+crime %>% 
+  gather(key = "crime_type", value = "reports", rapes, homicides, robberies, assaults) %>% 
+  ggplot(aes(reports)) + 
+  geom_histogram(bins = 25) + 
+  coord_cartesian(xlim = c(0, quantile(crime$violent_crimes, .75) + 1.5*iqr)) +
+  facet_wrap(~ crime_type)
+```
+
+From viewing the distributions of each crime, we can see that the violent crime with the largest spread is robberies. In addition, it appears that robberies are the most reported violent crime. Just like the distribution of violent crimes, the types of crimes are also heavily skewed to the right. Showing that there is a larger count of areas that have a lower reporting rate. 
+
+Let us look at boxplots of all the crimes: 
+```{r}
+crime %>% 
+  gather(key = "crime_type", value = "counts", rapes, homicides, robberies, assaults) %>% 
+  ggplot(aes(counts)) + 
+  geom_boxplot() + 
+  facet_wrap(~ crime_type) +
+  coord_cartesian(xlim = c(0, quantile(crime$violent_crimes, .75) + 1.5*iqr))
+```
+
+
+# More Advanced Analysis
+
+## Is there a relationship between population and violent crimes? What is the relationship between population and each type of crime?
+
+
+```{r}
+options(scipen = 1000)
+crime %>% 
+  gather(key = "crime_type", value = "counts", rapes, homicides, robberies, assaults) %>% 
+  ggplot(aes(population, violent_crimes)) +
+  geom_jitter() +
+  geom_smooth(method = lm)
+
+cor(crime$population, crime$violent_crimes)
+```
+
+As expected, there is a high correlation between population and violent crimes. From the chart, we see a cluster in the lower populated areas. From previous graphs, we know that there are a considerably larger amount lower populated areas than higher ones. However, we are still able to see the positive correlation between population and violent crimes. The higher the population, the higher the count of violent crimes reports will be. 
+
+We can also view the correlations between population and each type of crime:
+```{r}
+cor(crime[, c("rapes", "homicides", "assaults", "robberies", "population")])[,5]
+```
+
+As expected, we can see that there is a high positive correlation between each of the crimes and population. We can see that type of crime with the highest correlation with population is robberies. 
+
+```{r}
+options(scipen = 1000)
+crime %>% 
+  gather(key = "crime_type", value = "reports", rapes, homicides, robberies, assaults) %>% 
+  ggplot(aes(population, reports)) +
+  geom_jitter() + 
+  geom_polygon() +
+  facet_wrap( ~ crime_type)
+```
+
+From each of the graphs, we can see that not matter the population, homicides and rapes reports stay constant. In terms of assaults and robberies, we see that there is a steady increase in population and their respective report count. 
+
+## How has violent crime progressed over time for different areas in the United States? Which years had the highest average crime?
+
+```{r warning=FALSE}
+crime$report_year <- as.Date(as.character(crime$report_year), "%Y")
+
+crime %>% 
+  group_by(report_year) %>% 
+  summarise(avg_crimes = mean(violent_crimes)) %>% 
+  ggplot() + 
+  geom_line(aes(x = report_year, y = avg_crimes)) +
+  scale_y_continuous(label = comma) +
+  labs(title = "Average Crimes per Year", x = "Year", y = "Average Crimes")
+```
+
+According to the time series, average violent crimes had a steady increased from the mid-1970s to the early 1990s where it peaked. After the 1990s, violent crime have been on a steady decline. 
+
+Let us look at the top 5 years with the highest average crimes.
+```{r warning=FALSE}
+crime %>% 
+  group_by(report_year) %>% 
+  summarise(avg_crimes = mean(violent_crimes)) %>%
+  arrange(desc(avg_crimes)) %>% 
+  head(5)
+```
+
+Average crimes peaked in 1991. 
+
+We can also see how violent crimes have progressed in each region:
+```{r message=FALSE, warning=FALSE}
+crime %>% 
+  group_by(report_year, state.region) %>% 
+  summarise(avg_crimes = mean(violent_crimes, na.rm = TRUE)) %>% 
+  ggplot() + 
+  geom_line(aes(x = report_year, y = avg_crimes, color = state.region)) +
+  scale_y_continuous(label = comma) +
+  labs(title = "Average Crimes per Year", x = "Year", y = "Average Crimes")
+```
+
+In this time series, the region with the highest average crime reports was the Northeastern region. Each of these regions follow the similar trend increasing to a peak in 1991, and decreasing to the more recent parts of the set. 
+
+We can go even further and view the time series of states in each region:
+```{r message=FALSE, warning=FALSE}
+crime %>% 
+  group_by(report_year, state.region, state) %>% 
+  summarise(avg_crimes = mean(violent_crimes, na.rm = TRUE)) %>%
+  ggplot() + 
+  geom_line(aes(x = report_year, y = avg_crimes, color = state)) +
+  scale_y_continuous(label = comma) +
+  labs(title = "Average Crimes per Year", x = "Year", y = "Average Crimes") +
+  facet_wrap( ~ state.region)
+
+crime %>% 
+  group_by(report_year, state.region, state) %>% 
+  summarise(avg_crimes = mean(violent_crimes, na.rm = TRUE)) %>%
+  filter(state.region == "North Central") %>% 
+  ggplot() + 
+  geom_line(aes(x = report_year, y = avg_crimes, color = state)) + 
+  scale_y_continuous(label = comma) +
+  labs(title = "Average Crimes per Year", x = "Year", y = "Average Crimes") 
+```
+
+We are able to see each of the regions with their respected states and how average crime has progressed. This plot in comparison to the previous shows that one of the North Central states has the highest average crime rate over time. If we further look into the North Central region, we can see that Illinois has the highest average crime reports. 
+
+
+## What proportion of violent crimes does each type of crime make up in each year? 
+
+```{r message=FALSE, warning=FALSE}
+crime %>% 
+  gather(key = "crime_type", value = "reports", rapes, homicides, robberies, assaults) %>% 
+  group_by(report_year, crime_type) %>% 
+  summarize(tot_reports = sum(reports),
+            tot_crimes = sum(violent_crimes)) %>% 
+  ggplot(aes(report_year, tot_reports)) + 
+  geom_line(aes(color = crime_type)) +
+  geom_line(aes(y = tot_crimes))
+
+```
+
+In this time series we are able to see how each crime progressed individually. Rape and homicide reports have remained constant over time, while assaults and robberies have a more dynamic trend. From 1975 to mid-1980s we see that robberies was the most reported crime. However, after that point in the mid-1980s to the near present, assaults have been the most reported crime. 
+
+```{r message=FALSE, warning=FALSE}
+crime %>% 
+  gather(key = "crime_type", value = "reports", rapes, homicides, robberies, assaults) %>% 
+  group_by(report_year, crime_type) %>% 
+  summarize(tot_reports = sum(reports),
+            tot_crimes = sum(violent_crimes)) %>% 
+  ggplot(aes(report_year, tot_reports, fill = crime_type)) + 
+  geom_histogram(stat = "identity", position = "fill") 
+```
+
+In this chart, we can see how the proportions of crime type with respect to total reports has change. As we noted before, rapes and homicides keep a relatively constant proportion while assaults and robberies shift. 
+
+
+## Are some areas more likely to have a higher average violent crime per capita than others? Which areas have the highest/lowest average violent crimes per capita?
+
+
+```{r message=FALSE, warning=FALSE}
+avg_crimes_percap_state <- crime %>% 
+  group_by(city, state, state.region) %>% 
+  summarise(avg_crimes_percap = mean(violent_crimes/population)*100000) 
+
+plot_usmap(data = avg_crimes_percap_state, regions = "state", values = "avg_crimes_percap", color = "black") +
+  labs(title="Yearly State Average Crimes per Capita ") +
+  scale_fill_continuous(low = "grey", high = "red", name = "Average Crimes per Capita") +
+  theme(legend.position = "right", legend.key.size = unit(1, 'cm'))
+```
+
+The plot above allows us to compare each state and their average crime per 100,000 residents.The darker areas having the higher average crimes per capita than the lighter. The states that are grey are the ones that do not have reported crime data. 
+
+In order to have a better reading of the standing for each state, we can view the top 5 and low 5 in order:
+```{r}
+avg_crimes_percap_state %>% 
+  arrange(desc(avg_crimes_percap)) %>% 
+  head(5)
+
+avg_crimes_percap_state %>% 
+  arrange(avg_crimes_percap) %>% 
+  head(5)
+```
+
+From these chart, we are given top 5 cities, states, and regions that have the highest average crimes per capita. In this list we see that Atlanta, GA has a the highest average crimes per capita. On the other end of the spectrum, we see the cities with the lowest average crimes per capita in the United States. In this list we see that Fairfax Country, VA which has the lowest average crimes per capita. 
+
+## How does each type of crime relate to the different regions in the United States?
+
+```{r message=FALSE, warning=FALSE}
+crime %>%  
+  gather(key = "crime_type", value = "reports", rapes, homicides, robberies, assaults) %>%
+  group_by(state.region, crime_type) %>% 
+  summarize(tot_reports = sum(reports)) %>%
+  ggplot(aes(crime_type, tot_reports)) +
+  geom_bar(stat = "identity") + facet_wrap(~ state.region)
+```
+
+Here we see how each region and their report counts for each type of violent crime. All seem proportional when it comes to the report counts of each crime with rapes being the lowest and assaults being the highest.The only region that breaks this trend is the Northeast. Their highest report count is robberies while their second is assaults. 
+
+We can also see which states have the highest reports in each crime category:
+```{r message=FALSE, warning=FALSE}
+crime %>%  
+  gather(key = "crime_type", value = "reports", rapes, homicides, robberies, assaults) %>%
+  group_by(crime_type, state) %>% 
+  summarize(tot_reports = sum(reports)) %>% 
+  filter(tot_reports == max(tot_reports)) %>% 
+  arrange(desc(tot_reports))
+
+crime %>%  
+  gather(key = "crime_type", value = "reports", rapes, homicides, robberies, assaults) %>%
+  group_by(crime_type, state) %>% 
+  summarize(tot_reports = max(sum(reports))) %>% 
+  filter(state == c("NY", "CA")) %>% 
+  arrange(crime_type, desc(tot_reports)) %>% 
+  ggplot(aes(state, tot_reports)) +
+  geom_bar(stat = "identity") +
+  facet_wrap( ~ crime_type) +
+  coord_flip()
+
+```
+
+From the table and the chart, we see which states have the highest total reports for each crime. New York has the highest homicide and robbery reports while California has the highest assualts and rape reports. This is to be expected, as we have previously came to the conclusion that there is a high correlation between population and violent crimes. Both New York and California are two of the most populated states in the U.S. 
+
+We can also view the most populated areas to reinforce this conclusion:
+```{r}
+crime %>% 
+  gather(key = "crime_type", value = "reports", rapes, homicides, robberies, assaults) %>%
+  group_by(state) %>% 
+  summarise(tot_pop = sum(population),
+            tot_reports = sum(reports)) %>% 
+  arrange(desc(tot_pop))
+```
