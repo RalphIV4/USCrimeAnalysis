@@ -6,40 +6,77 @@ library(scales)
 # read in data set
 crime_raw <- read.csv("crime_report.csv")
 
-# create data frame with state region and state abbreviation
+# ---------- Initial Computations ----------
+## create data frame with state region and state abbreviation
 regions <- data.frame(state.region, state.abb)
 
-# 
-crime <- na.omit(crime_raw) %>% # omit 
+## separate "agency_jurisdiction" into "state" and "city" columns
+crime <- na.omit(crime_raw) %>% 
   separate(agency_jurisdiction, c("city", "state"), sep = ", ") %>% 
   left_join(regions, by = c("state" = "state.abb"))
 
+## use "South" to replace remander of missing values as D.C. was not classified
+for (i in 1:nrow(crime)){ 
+  if (is.na(crime$state.region[i])){ 
+    crime$state.region[i] <- "South"  
+  } 
+}
 
+# ---------- Basic Exploratory Analysis ----------
+## distribution of report years
 crime %>% 
-  anti_join(regions)
+  ggplot(aes(report_year)) +
+  geom_bar()
+
+table(crime$report_year) 
+
+## Distribution of States
+crime %>% 
+  count(state) %>% 
+  mutate(state = reorder(state, n)) %>% 
+  ggplot(aes(state, n)) +
+  geom_bar(stat = "identity") +
+  coord_flip() 
+
+## Distribution of United States Regions
+crime %>% 
+  ggplot() + 
+  geom_bar(aes(state.region))  
+
+## Distribution of Violent Crimes
+ggplot(crime) +  
+  geom_histogram(aes(violent_crimes), bins = 30) 
+
+iqr <- IQR(crime$violent_crimes) 
+ 
+ggplot(crime, aes(violent_crimes)) +  # without outliers
+  geom_boxplot() +  
+  coord_cartesian(xlim = c(0, quantile(crime$violent_crimes, .75) + 1.5*iqr)) 
+
+## Distribution of Population
+options(scipen = 1000) 
+ggplot(crime) + # histogram
+  geom_histogram(aes(population), bins = 35) 
+
+ggplot(crime) + # boxplot
+  geom_boxplot(aes(population)) 
+
+## Distributions for Each Violent Crime
+crime %>%  
+  gather(key = "crime_type", value = "reports", rapes, homicides, robberies, assaults) %>%  
+  ggplot(aes(reports)) +  
+  geom_histogram(bins = 25) +  
+  coord_cartesian(xlim = c(0, quantile(crime$violent_crimes, .75) + 1.5*iqr)) + 
+  facet_wrap(~ crime_type) 
 
 
-crime$p.homicides <- round(100 * crime$homicides/crime$violent_crimes, 2)
-crime$p.rapes <- round(100 * crime$rapes/crime$violent_crimes, 2)
-crime$p.assaults <- round(100 * crime$assaults/crime$violent_crimes, 2)
-crime$p.robberies <- round(100 * crime$robberies/crime$violent_crimes, 2)
-crime$report_year <- as.Date(as.character(crime$report_year), "%Y")
 
-ggplot(crime) + 
-  geom_histogram(aes(violent_crimes), bins = 30)
 
-ggplot(crime, aes(violent_crimes)) + 
-  geom_boxplot()
 
-iqr <- IQR(crime$violent_crimes)
 
-ggplot(crime, aes(violent_crimes)) + 
-  geom_boxplot() + 
-  coord_cartesian(xlim = c(0, quantile(crime$violent_crimes, .75) + 1.5*iqr))
 
-ggplot(crime, aes(violent_crimes, state.region)) + 
-  geom_boxplot() + 
-  coord_cartesian(xlim = c(0, quantile(crime$violent_crimes, .75) + 1.5*iqr))
+
+
 
 
 
@@ -143,5 +180,6 @@ crime %>%
 
 c <- crime %>% 
   gather(key = "crime_type", value = "reports", rapes, homicides, robberies, assaults) 
+
 
 
