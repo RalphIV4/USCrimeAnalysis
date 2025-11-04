@@ -62,37 +62,61 @@ ggplot(crime) + # boxplot
   geom_boxplot(aes(population)) 
 
 ## Distributions for Each Violent Crime
-crime %>%  
+crime %>%  # histogram
   gather(key = "crime_type", value = "reports", rapes, homicides, robberies, assaults) %>%  
   ggplot(aes(reports)) +  
   geom_histogram(bins = 25) +  
   coord_cartesian(xlim = c(0, quantile(crime$violent_crimes, .75) + 1.5*iqr)) + 
   facet_wrap(~ crime_type) 
 
+crime %>% # boxplot
+  gather(key = "crime_type", value = "counts", rapes, homicides, robberies, assaults) %>% 
+  ggplot(aes(counts)) + 
+  geom_boxplot() + 
+  facet_wrap(~ crime_type) +
+  coord_cartesian(xlim = c(0, quantile(crime$violent_crimes, .75) + 1.5*iqr))
 
+# ---------- Advanced Analysis ----------
+##  Population/Violent Crimes Correlation
+options(scipen = 1000)
+crime %>% 
+  gather(key = "crime_type", value = "counts", rapes, homicides, robberies, assaults) %>% 
+  ggplot(aes(population, violent_crimes)) +
+  geom_jitter() +
+  geom_smooth(method = lm)
 
+cor(crime$population, crime$violent_crimes) 
 
+cor(crime[, c("rapes", "homicides", "assaults", "robberies", "population")])[,5]
 
+options(scipen = 1000)
+crime %>% 
+  gather(key = "crime_type", value = "reports", rapes, homicides, robberies, assaults) %>% 
+  ggplot(aes(population, reports)) +
+  geom_jitter() + 
+  geom_polygon() +
+  facet_wrap( ~ crime_type)
 
+## Violent Crimes Time Series
+crime$report_year <- as.Date(as.character(crime$report_year), "%Y")
 
-
-
-
-
-
-#Time series of total crimes each year
 crime %>% 
   group_by(report_year) %>% 
-  summarise(total_crimes = sum(violent_crimes, na.rm = TRUE)) %>% 
+  summarise(avg_crimes = mean(violent_crimes)) %>% 
   ggplot() + 
-  geom_line(aes(x = report_year, y = total_crimes)) +
+  geom_line(aes(x = report_year, y = avg_crimes)) +
   scale_y_continuous(label = comma) +
-  labs(title = "Total Crimes per Year", x = "Year", y = "Total Crimes")
+  labs(title = "Average Crimes per Year", x = "Year", y = "Average Crimes")
+
+crime %>% 
+  group_by(report_year) %>% 
+  summarise(avg_crimes = mean(violent_crimes)) %>%
+  arrange(desc(avg_crimes)) %>% 
+  head(5)
 
 crime %>% 
   group_by(report_year, state.region) %>% 
   summarise(avg_crimes = mean(violent_crimes, na.rm = TRUE)) %>% 
-  filter(!is.na(state.region)) %>% 
   ggplot() + 
   geom_line(aes(x = report_year, y = avg_crimes, color = state.region)) +
   scale_y_continuous(label = comma) +
@@ -107,55 +131,16 @@ crime %>%
   labs(title = "Average Crimes per Year", x = "Year", y = "Average Crimes") +
   facet_wrap( ~ state.region)
 
-avg_crimes_percap_state <- crime %>% 
-  group_by(state) %>% 
-  summarise(avg_crimes_percap = mean(crimes_percapita)) 
-
-plot_usmap(data = avg_crimes_percap_state, regions = "state", values = "avg_crimes_percap", color = "black") +
-  labs(title="Yearly State Average Crimes per Capita ") +
-  scale_fill_continuous(low = "grey", high = "red", name = "Average Crimes per Capita") +
-  theme(legend.position = "right", legend.key.size = unit(1, 'cm'))
-        
 crime %>% 
-  group_by(report_year) %>% 
-  summarise(total_crimes = sum(violent_crimes)) %>%
-  arrange(desc(total_crimes)) %>% 
-  head(10) %>% 
-  ggplot(aes(report_year, total_crimes)) + 
-  geom_histogram(stat = "identity") +
+  group_by(report_year, state.region, state) %>% 
+  summarise(avg_crimes = mean(violent_crimes, na.rm = TRUE)) %>%
+  filter(state.region == "North Central") %>% 
+  ggplot() + 
+  geom_line(aes(x = report_year, y = avg_crimes, color = state)) + 
   scale_y_continuous(label = comma) +
-  labs(title = "Total Crimes per Year", x = "Year", y = "Total Crimes")
+  labs(title = "Average Crimes per Year", x = "Year", y = "Average Crimes") 
 
-
-
-
-c <-crime %>% 
-  gather(key = "crime_type", value = "counts", rapes, homicides, assaults, robberies) 
-
-crime %>% 
-  ggplot(aes(robberies)) + geom_histogram()
-
-cor(crime[, c("rapes", "homicides", "assaults", "robberies", "population")])[, 5]
-
-subset(regions, !(state.abb %in% crime$state))
-
-str(crime_raw)
-
-
-crime %>%
-  group_by(state.region) %>%
-  gather(key = "crime_type", value = "counts", rapes, homicides, robberies, assaults) %>%
-  ggplot(aes(x = reorder(state.region, -counts), fill = crime_type)) + 
-  geom_bar() + xlab("State Regions")
-
-table(c[, c("crime_type", "state.region", "counts")])
-
-
-
-library(lubridate)
-
-floor_date(crime$report_year, "year")
-
+## Violent Crimes Proportions Time Series
 crime %>% 
   gather(key = "crime_type", value = "reports", rapes, homicides, robberies, assaults) %>% 
   group_by(report_year, crime_type) %>% 
@@ -164,22 +149,65 @@ crime %>%
   ggplot(aes(report_year, tot_reports)) + 
   geom_line(aes(color = crime_type)) +
   geom_line(aes(y = tot_crimes))
-  
 
+crime %>% 
+  gather(key = "crime_type", value = "reports", rapes, homicides, robberies, assaults) %>% 
+  group_by(report_year, crime_type) %>% 
+  summarize(tot_reports = sum(reports),
+            tot_crimes = sum(violent_crimes)) %>% 
+  ggplot(aes(report_year, tot_reports, fill = crime_type)) + 
+  geom_histogram(stat = "identity", position = "fill") 
+
+## Average Violent Crimes per Capita
+avg_crimes_percap_state <- crime %>% 
+  group_by(city, state, state.region) %>% 
+  summarise(avg_crimes_percap = mean(violent_crimes/population)*100000) 
+
+plot_usmap(data = avg_crimes_percap_state, regions = "state", values = "avg_crimes_percap", color = "black") +
+  labs(title="Yearly State Average Crimes per Capita ") +
+  scale_fill_continuous(low = "grey", high = "red", name = "Average Crimes per Capita") +
+  theme(legend.position = "right", legend.key.size = unit(1, 'cm'))
+
+avg_crimes_percap_state %>% 
+  arrange(desc(avg_crimes_percap)) %>% 
+  head(5)
+
+avg_crimes_percap_state %>% 
+  arrange(avg_crimes_percap) %>% 
+  head(5)
+
+## Crime Reports per Region
+crime %>%  
+  gather(key = "crime_type", value = "reports", rapes, homicides, robberies, assaults) %>%
+  group_by(state.region, crime_type) %>% 
+  summarize(tot_reports = sum(reports)) %>%
+  ggplot(aes(crime_type, tot_reports)) +
+  geom_bar(stat = "identity") + facet_wrap(~ state.region)
+
+crime %>%  
+  gather(key = "crime_type", value = "reports", rapes, homicides, robberies, assaults) %>%
+  group_by(crime_type, state) %>% 
+  summarize(tot_reports = sum(reports)) %>% 
+  filter(tot_reports == max(tot_reports)) %>% 
+  arrange(desc(tot_reports))
 
 crime %>%  
   gather(key = "crime_type", value = "reports", rapes, homicides, robberies, assaults) %>%
   group_by(crime_type, state) %>% 
   summarize(tot_reports = max(sum(reports))) %>% 
-  filter(tot_reports == max(tot_reports)) %>% 
+  filter(state == c("NY", "CA")) %>% 
   arrange(crime_type, desc(tot_reports)) %>% 
   ggplot(aes(state, tot_reports)) +
   geom_bar(stat = "identity") +
   facet_wrap( ~ crime_type) +
   coord_flip()
 
-c <- crime %>% 
-  gather(key = "crime_type", value = "reports", rapes, homicides, robberies, assaults) 
+crime %>% 
+  gather(key = "crime_type", value = "reports", rapes, homicides, robberies, assaults) %>%
+  group_by(state) %>% 
+  summarise(tot_pop = sum(population),
+            tot_reports = sum(reports)) %>% 
+  arrange(desc(tot_pop))
 
 
 
